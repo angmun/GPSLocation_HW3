@@ -7,6 +7,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -18,6 +19,8 @@ import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.util.Observable;
 import java.util.Observer;
@@ -50,39 +53,93 @@ public class MainFragment extends Fragment implements Observer {
     private LinearLayout locationValues;
 
     // Update these every time button is pressed...
-    private Location initialLocation;
-    private Location currentLocation;
-    private Location previousLocation;
+    private Location initialLocation = null;
+    private Location currentLocation = null;
+    private Location previousLocation = null;
+
+    private double totalDistance = 0.0;
 
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private LinearLayout makeLocationInfoView(){
+    private TextView makeLocationInfoView(){
 
-        LinearLayout locationInfoLayout = new LinearLayout(this.getContext());
-        locationInfoLayout.setOrientation(LinearLayout.VERTICAL);
-        locationInfoLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-        locationInfoLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-        locationInfoLayout.setPadding(0, 10, 0, 10);
+//        LinearLayout locationInfoLayout = new LinearLayout(this.getContext());
+//        locationInfoLayout.setOrientation(LinearLayout.VERTICAL);
+//        locationInfoLayout.setLayoutParams(new LinearLayout.LayoutParams(
+//                LinearLayout.LayoutParams.MATCH_PARENT,
+//                LinearLayout.LayoutParams.WRAP_CONTENT
+//        ));
+//        locationInfoLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+//        locationInfoLayout.setPadding(0, 10, 0, 10);
+//
+
         TextView locationText = new TextView(this.getContext());
         locationText.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
+        long t1 = previousLocation.getTime();
+        long t2 = currentLocation.getTime();
+
+        long timeSeconds = (t2 - t1)/1000;
+        double totalSpeed = ((t2 - initialLocation.getTime())/1000) != 0 ? totalDistance/((t2 - initialLocation.getTime())/1000) : 0.0 ;
+
+        totalDistance += currentLocation.distanceTo(previousLocation);
+
+        String locationInfo = String.format("Current Location: (%f, %f)\n" +
+                        "Current Speed: %f\n" +
+                        "Distance Between Latest Points: %f\n" +
+                        "Speed Between Latest Points: %f\n" +
+                        "Overall Trip Distance: %f\n" +
+                        "Overall Trip Speed: %f ",
+                currentLocation.getLatitude(),
+                currentLocation.getLongitude(),
+                currentLocation.getSpeed(),
+                currentLocation.distanceTo(previousLocation),
+                timeSeconds != 0 ? currentLocation.distanceTo(previousLocation)/timeSeconds : 0.0,
+                totalDistance,
+                totalSpeed);
+
         //TODO change the string value
-        locationText.setText(String.format("Current Location: (%f, %f)", currentLocation.getLatitude(), currentLocation.getLongitude()));
+        locationText.setText(locationInfo);
 
         //TODO specify units of the text size
         locationText.setTextSize(24);
 
-        locationInfoLayout.addView(locationText);
+        previousLocation = new Location(currentLocation);
+        return locationText;
 
-        return locationInfoLayout;
+    }
+
+    private TextView makeLocationInfoView(String info){
+
+//        LinearLayout locationInfoLayout = new LinearLayout(this.getContext());
+//        locationInfoLayout.setOrientation(LinearLayout.VERTICAL);
+//        locationInfoLayout.setLayoutParams(new LinearLayout.LayoutParams(
+//                LinearLayout.LayoutParams.MATCH_PARENT,
+//                LinearLayout.LayoutParams.WRAP_CONTENT
+//        ));
+//        locationInfoLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+//        locationInfoLayout.setPadding(0, 10, 0, 10);
+        TextView locationText = new TextView(this.getContext());
+        locationText.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+
+
+        String locationInfo = info;
+
+        //TODO change the string value
+        locationText.setText(locationInfo);
+
+        //TODO specify units of the text size
+        locationText.setTextSize(24);
+
+        return locationText;
 
     }
 
@@ -118,16 +175,73 @@ public class MainFragment extends Fragment implements Observer {
         }
     }
 
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        int numChildren = locationValues.getChildCount();
+
+        for(int i = 0; i < numChildren; i++){
+            TextView currentLocationInfo = (TextView)(locationValues.getChildAt(i));
+            outState.putString(String.valueOf(i), currentLocationInfo.getText().toString());
+        }
+
+        double initlat = initialLocation.getLatitude();
+        double initlon = initialLocation.getLongitude();
+
+        outState.putDouble("initLat", initlat);
+        outState.putDouble("initLon", initlon);
+
+        double prevlat = previousLocation.getLatitude();
+        double prevlon = previousLocation.getLongitude();
+
+        outState.putDouble("prevLat", prevlat);
+        outState.putDouble("prevLon", prevlon);
+
+        outState.putDouble("totalDistance", totalDistance);
+
+        outState.putInt("numChildren", numChildren);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
+
+
         this.tv_lat = view.findViewById(R.id.tv_lat);
         this.tv_lon = view.findViewById(R.id.tv_lon);
         this.record = view.findViewById(R.id.recordButton);
         this.locationValues = view.findViewById(R.id.locationValues);
+        this.record.setEnabled(false);
 
+        // Restore the instance data
+        if(savedInstanceState != null){
+            int numChildren = savedInstanceState.getInt("numChildren");
+            double initlat = savedInstanceState.getDouble("initLat");
+            double initlon = savedInstanceState.getDouble("initLon");
+            double prevlat = savedInstanceState.getDouble("prevLat");
+            double prevlon = savedInstanceState.getDouble("prevLong");
+            totalDistance = savedInstanceState.getDouble("totalDistance");
+
+            initialLocation = new Location("");
+            initialLocation.setLatitude(initlat);
+            initialLocation.setLongitude(initlon);
+
+            previousLocation = new Location("");
+            previousLocation.setLatitude(prevlat);
+            previousLocation.setLongitude(prevlon);
+
+            for(int i = 0; i < numChildren; i++){
+
+                locationValues.addView(makeLocationInfoView(savedInstanceState.getString(String.valueOf(i))));
+
+            }
+
+
+        }
 
         if (handler == null) {
             this.handler = new LocationHandler(getActivity());
@@ -201,6 +315,10 @@ public class MainFragment extends Fragment implements Observer {
     public void update(Observable observable, Object o) {
         if (observable instanceof LocationHandler) {
             Location l = (Location) o;
+            if(initialLocation == null) {
+                initialLocation = l;
+                previousLocation = l;
+            }
             currentLocation = l;
             final double lat = l.getLatitude();
             final double lon = l.getLongitude();
@@ -210,7 +328,7 @@ public class MainFragment extends Fragment implements Observer {
                 public void run() {
                     tv_lat.setText(Double.toString(lat));
                     tv_lon.setText(Double.toString(lon));
-
+                    record.setEnabled(true);
                 }
             });
         }

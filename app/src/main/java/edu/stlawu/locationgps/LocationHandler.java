@@ -63,16 +63,22 @@ public class LocationHandler
                 return;
             }
 
-            l = lm.getLastKnownLocation(
-                    LocationManager.PASSIVE_PROVIDER);
+            l = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
             if (l != null) {
                 setChanged();
                 notifyObservers(l);
                 return;
             }
 
+//            forceUpdate(l);
+
         }
     }
+
+//    private void forceUpdate(Location location){
+//        setChanged();
+//        notifyObservers(location);
+//    }
 
     @Override
     public void onLocationChanged(Location location) {
