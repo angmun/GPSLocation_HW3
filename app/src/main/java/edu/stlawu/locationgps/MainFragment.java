@@ -215,6 +215,9 @@ public class MainFragment extends Fragment implements Observer {
         outState.putDouble("totalDistance", totalDistance);
 
         outState.putInt("numChildren", numChildren);
+
+        outState.putLong("initialTime", initialLocation.getTime());
+        outState.putLong("previousTime", previousLocation.getTime());
     }
 
     @Override
@@ -237,23 +240,28 @@ public class MainFragment extends Fragment implements Observer {
             double initlat = savedInstanceState.getDouble("initLat");
             double initlon = savedInstanceState.getDouble("initLon");
             double prevlat = savedInstanceState.getDouble("prevLat");
-            double prevlon = savedInstanceState.getDouble("prevLong");
+            double prevlon = savedInstanceState.getDouble("prevLon");
+            long initialTime = savedInstanceState.getLong("initialTime");
+            long previousTime = savedInstanceState.getLong("previousTime");
             totalDistance = savedInstanceState.getDouble("totalDistance");
 
             initialLocation = new Location("");
             initialLocation.setLatitude(initlat);
             initialLocation.setLongitude(initlon);
+            initialLocation.setTime(initialTime);
 
             previousLocation = new Location("");
             previousLocation.setLatitude(prevlat);
             previousLocation.setLongitude(prevlon);
+            previousLocation.setTime(previousTime);
+
+            Log.i(LOGTAG, String.format("%f %f", previousLocation.getLatitude(), previousLocation.getLongitude()));
 
             for(int i = 0; i < numChildren; i++){
 
                 locationValues.addView(makeLocationInfoView(savedInstanceState.getString(String.valueOf(i))));
 
             }
-
 
         }
 
@@ -334,6 +342,7 @@ public class MainFragment extends Fragment implements Observer {
                 previousLocation = l;
             }
             currentLocation = l;
+            Log.i(LOGTAG, String.format("%f %f", currentLocation.getLatitude(), currentLocation.getLongitude()));
             final double lat = l.getLatitude();
             final double lon = l.getLongitude();
 
