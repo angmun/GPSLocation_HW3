@@ -3,6 +3,7 @@ package edu.stlawu.locationgps;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -59,6 +60,8 @@ public class MainFragment extends Fragment implements Observer {
 
     private double totalDistance = 0.0;
 
+    private boolean color = true;
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,9 +80,14 @@ public class MainFragment extends Fragment implements Observer {
 
         TextView locationText = new TextView(this.getContext());
         locationText.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
+
+        locationText.setPadding(10,10,10,10);
+        if(this.color) locationText.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+        this.color = !this.color;
+        locationText.setGravity(Gravity.CENTER_HORIZONTAL);
 
         long t1 = previousLocation.getTime();
         long t2 = currentLocation.getTime();
@@ -107,7 +115,7 @@ public class MainFragment extends Fragment implements Observer {
         locationText.setText(locationInfo);
 
         //TODO specify units of the text size
-        locationText.setTextSize(24);
+        locationText.setTextSize(12);
 
         previousLocation = new Location(currentLocation);
         return locationText;
@@ -126,9 +134,14 @@ public class MainFragment extends Fragment implements Observer {
 //        locationInfoLayout.setPadding(0, 10, 0, 10);
         TextView locationText = new TextView(this.getContext());
         locationText.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
+
+        locationText.setPadding(10,10,10,10);
+        if(this.color) locationText.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+        this.color = !this.color;
+        locationText.setGravity(Gravity.CENTER_HORIZONTAL);
 
 
         String locationInfo = info;
@@ -137,7 +150,7 @@ public class MainFragment extends Fragment implements Observer {
         locationText.setText(locationInfo);
 
         //TODO specify units of the text size
-        locationText.setTextSize(24);
+        locationText.setTextSize(12);
 
         return locationText;
 
@@ -216,6 +229,7 @@ public class MainFragment extends Fragment implements Observer {
         this.record = view.findViewById(R.id.recordButton);
         this.locationValues = view.findViewById(R.id.locationValues);
         this.record.setEnabled(false);
+        this.color = true;
 
         // Restore the instance data
         if(savedInstanceState != null){
