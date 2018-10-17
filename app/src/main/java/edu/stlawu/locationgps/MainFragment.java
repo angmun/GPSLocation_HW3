@@ -98,11 +98,11 @@ public class MainFragment extends Fragment implements Observer {
         totalDistance += currentLocation.distanceTo(previousLocation);
 
         String locationInfo = String.format("Current Location: (%f, %f)\n" +
-                        "Current Speed: %f\n" +
-                        "Distance Between Latest Points: %f\n" +
-                        "Speed Between Latest Points: %f\n" +
-                        "Overall Trip Distance: %f\n" +
-                        "Overall Trip Speed: %f ",
+                        "Current Speed: %f m/s\n" +
+                        "Distance Between Latest Points: %f m\n" +
+                        "Speed Between Latest Points: %f m/s\n" +
+                        "Overall Trip Distance: %f m\n" +
+                        "Overall Trip Speed: %f m/s",
                 currentLocation.getLatitude(),
                 currentLocation.getLongitude(),
                 currentLocation.getSpeed(),
@@ -232,6 +232,7 @@ public class MainFragment extends Fragment implements Observer {
         this.record = view.findViewById(R.id.recordButton);
         this.locationValues = view.findViewById(R.id.locationValues);
         this.record.setEnabled(false);
+
         this.color = true;
 
         // Restore the instance data
